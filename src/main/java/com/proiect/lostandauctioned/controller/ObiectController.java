@@ -21,6 +21,11 @@ public class ObiectController {
         return obiectService.getObiecte();
     }
 
+    @GetMapping("/search/{keyword}")
+    public List<Obiect> searchObiecte(@PathVariable String keyword) {
+        return obiectService.searchObiecte(keyword);
+    }
+
     @GetMapping("/{denumire}")
     public Obiect getObiectByDenumire(@PathVariable String denumire) {
         return obiectService.getObiectByDenumire(denumire).orElse(null);
@@ -29,5 +34,10 @@ public class ObiectController {
     @PostMapping
     public Obiect createObiect(@RequestBody Obiect obiect) {
         return obiectService.createObiect(obiect);
+    }
+
+    @PostMapping("/revendicare/{denumire}")
+    public Obiect revendicareObiect(@PathVariable String denumire) {
+        return obiectService.revendicareObiect(denumire).orElse(null);
     }
 }
