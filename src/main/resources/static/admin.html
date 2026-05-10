@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2, h3 { text-align: center; }
+        .section { padding: 20px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 20px; }
+        button { padding: 10px; font-size: 1em; }
+        .item, .auction { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .item p, .auction p { margin: 5px 0; }
+        .admin-controls button { margin-right: 10px; }
+        .logout-form { text-align: right; margin-bottom: 20px; }
+        .offer { font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+    <div class="logout-form">
+        <form method="post" action="/logout"><button type="submit">Logout</button></form>
+    </div>
+
+    <h1>Admin Dashboard</h1>
+
+    <div class="section">
+        <button onclick="refreshAdminPanels()">Refresh Panels</button>
+
+        <h3>Items Pending Approval</h3>
+        <div id="reported-items"></div>
+
+        <h3>Items Pending Return</h3>
+        <div id="claimed-items"></div>
+
+        <h3>Auctionable Items</h3>
+        <div id="auctionable-items"></div>
+
+        <h3>Items Currently in Auction</h3>
+        <div id="in-auction-items"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8081';
+
+        function refreshAdminPanels() {
+            fetch(`${API_BASE_URL}/admin/reported`).then(r => r.json()).then(items => displayItems(items, 'reported-items', 'approve', 'reject'));
+            fetch(`${API_BASE_URL}/admin/claimed`).then(r => r.json()).then(items => displayItems(items, 'claimed-items', 'confirmReturn'));
+            fetch(`${API_BASE_URL}/admin/auctionable`).then(r => r.json()).then(items => displayItems(items, 'auctionable-items', 'sendToAuction'));
+            fetch(`${API_BASE_URL}/admin/in-auction`).then(r => r.json()).then(auctions => displayAuctions(auctions, 'in-auction-items'));
+        }
+
+        function displayItems(items, containerId, primaryAction, secondaryAction) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.length === 0 ? '<p>None at this time.</p>' : '';
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item';
+                const primaryFunc = primaryAction.replace(/-(\w)/g, (m, l) => l.toUpperCase());
+                let buttons = `<button onclick="${primaryFunc}Item('${item.denumire}')">${primaryAction.replace(/([A-Z])/g, ' $1').replace('-', ' ')}</button>`;
+                if (secondaryAction) {
+                    const secondaryFunc = secondaryAction.replace(/-(\w)/g, (m, l) => l.toUpperCase());
+                    buttons += `<button onclick="${secondaryFunc}Item('${item.denumire}')">${secondaryAction}</button>`;
+                }
+                div.innerHTML = `<p><strong>Name:</strong> ${item.denumire}</p><p><strong>Status:</strong> ${item.status}</p><div class="admin-controls">${buttons}</div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function displayAuctions(auctions, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = auctions.length === 0 ? '<p>None at this time.</p>' : '';
+            auctions.forEach(auction => {
+                const div = document.createElement('div');
+                div.className = 'auction';
+                let offersHtml = 'No offers yet.';
+                if (auction.oferte && auction.oferte.length > 0) {
+                    const highestOffer = auction.oferte.reduce((max, offer) => offer.suma > max.suma ? offer : max, auction.oferte[0]);
+                    offersHtml = `Total Offers: ${auction.oferte.length}. Highest: <strong>${highestOffer.suma} by ${highestOffer.numeOfertant}</strong>`;
+                }
+                div.innerHTML = `
+                    <p><strong>Item:</strong> ${auction.denumireObiect}</p>
+                    <div class="offer">${offersHtml}</div>
+                    <div class="admin-controls">
+                        <button onclick="finishAuctionItem('${auction.denumireObiect}')">Finish Auction (Accept Highest)</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function approveItem(denumire) { fetch(`${API_BASE_URL}/admin/approve/${denumire}`, { method: 'POST' }).then(refreshAdminPanels); }
+        function rejectItem(denumire) { fetch(`${API_BASE_URL}/admin/reject/${denumire}`, { method: 'POST' }).then(refreshAdminPanels); }
+        function confirmReturnItem(denumire) { fetch(`${API_BASE_URL}/admin/confirm-return/${denumire}`, { method: 'POST' }).then(refreshAdminPanels); }
+        function sendToAuctionItem(denumire) { fetch(`${API_BASE_URL}/admin/to-auction/${denumire}`, { method: 'POST' }).then(refreshAdminPanels); }
+        function finishAuctionItem(denumire) { fetch(`${API_BASE_URL}/admin/finish-auction/${denumire}`, { method: 'POST' }).then(refreshAdminPanels); }
+
+        window.onload = refreshAdminPanels;
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lost and Auctioned</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2 { text-align: center; }
+        .container { display: flex; gap: 40px; }
+        .section { flex: 1; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        form { display: flex; flex-direction: column; gap: 10px; }
+        input, button { padding: 10px; font-size: 1em; }
+        #results { margin-top: 20px; }
+        .item { border: 1px solid #eee; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .item p { margin: 5px 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Lost and Auctioned</h1>
+
+    <div class="container">
+        <div class="section">
+            <h2>Report a Lost Item</h2>
+            <form id="report-form">
+                <input type="text" id="denumire" name="denumire" placeholder="Item Name (e.g., Cheie)" required>
+                <input type="text" id="descriere" name="descriere" placeholder="Description (e.g., O cheie de masina)" required>
+                <input type="text" id="locatie" name="locatie" placeholder="Location (e.g., Biblioteca)" required>
+                <button type="submit">Report Item</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>Search for a Lost Item</h2>
+            <form id="search-form">
+                <input type="text" id="keyword" name="keyword" placeholder="Search keyword..." required>
+                <button type="submit">Search</button>
+            </form>
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8081';
+
+        document.getElementById('report-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = { denumire: form.denumire.value, descriere: form.descriere.value, locatie: form.locatie.value, poza: '' };
+
+            fetch(`${API_BASE_URL}/obiecte`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(() => {
+                alert('Item reported successfully! An admin will review it shortly.');
+                form.reset();
+            })
+            .catch(error => console.error('Error reporting item:', error));
+        });
+
+        document.getElementById('search-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const keyword = event.target.keyword.value;
+            fetch(`${API_BASE_URL}/obiecte/search/${keyword}`)
+                .then(response => response.json())
+                .then(displaySearchResults)
+                .catch(error => console.error('Error searching:', error));
+        });
+
+        function displaySearchResults(items) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            if (items.length === 0) {
+                resultsDiv.innerHTML = '<p>No approved items found matching your search.</p>';
+                return;
+            }
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item';
+                itemDiv.innerHTML = `
+                    <p><strong>Name:</strong> ${item.denumire}</p>
+                    <p><strong>Description:</strong> ${item.descriere}</p>
+                    <p><strong>Status:</strong> ${item.status}</p>
+                    <button onclick="claimItem('${item.denumire}')">Claim</button>
+                `;
+                resultsDiv.appendChild(itemDiv);
+            });
+        }
+
+        function claimItem(denumire) {
+            fetch(`${API_BASE_URL}/obiecte/revendicare/${denumire}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(item => {
+                    if (item) {
+                        alert('Claim request sent! An admin will confirm the return.');
+                        document.getElementById('search-form').dispatchEvent(new Event('submit'));
+                    }
+                })
+                .catch(error => console.error('Error claiming item:', error));
+        }
+    </script>
+
+</body>
+</html>
