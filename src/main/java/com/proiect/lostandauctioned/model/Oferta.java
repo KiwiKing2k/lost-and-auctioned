@@ -1,37 +1,27 @@
 package com.proiect.lostandauctioned.model;
 
 public class Oferta {
-    private String denumire;
-    private boolean esteMaxim;
-    private Utilizator licitant;
+    private String numeOfertant;
+    private double suma;
 
-    public Oferta(String denumire, boolean esteMaxim, Utilizator licitant) {
-        this.denumire = denumire;
-        this.esteMaxim = esteMaxim;
-        this.licitant = licitant;
+    public Oferta(String numeOfertant, double suma) {
+        this.numeOfertant = numeOfertant;
+        this.suma = suma;
     }
 
-    public String getDenumire() {
-        return denumire;
+    public String getNumeOfertant() {
+        return numeOfertant;
     }
 
-    public void setDenumire(String denumire) {
-        this.denumire = denumire;
+    public void setNumeOfertant(String numeOfertant) {
+        this.numeOfertant = numeOfertant;
     }
 
-    public boolean isEsteMaxim() {
-        return esteMaxim;
+    public double getSuma() {
+        return suma;
     }
 
-    public void setEsteMaxim(boolean esteMaxim) {
-        this.esteMaxim = esteMaxim;
-    }
-
-    public Utilizator getLicitant() {
-        return licitant;
-    }
-
-    public void setLicitant(Utilizator licitant) {
-        this.licitant = licitant;
+    public void setSuma(double suma) {
+        this.suma = suma;
     }
 }

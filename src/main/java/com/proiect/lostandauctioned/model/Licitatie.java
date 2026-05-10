@@ -1,34 +1,36 @@
 package com.proiect.lostandauctioned.model;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class Licitatie {
-    private String denumire;
-    private Obiect obiect;
+    private String denumireObiect;
     private boolean finalizat;
-    private List<Oferta> licitatii;
+    private List<Oferta> oferte;
 
-    public Licitatie(String denumire, Obiect obiect, boolean finalizat, List<Oferta> licitatii) {
-        this.denumire = denumire;
-        this.obiect = obiect;
-        this.finalizat = finalizat;
-        this.licitatii = licitatii;
+    public Licitatie(String denumireObiect) {
+        this.denumireObiect = denumireObiect;
+        this.finalizat = false;
+        this.oferte = new ArrayList<>();
     }
 
-    public String getDenumire() {
-        return denumire;
+    public void adaugaOferta(Oferta oferta) {
+        this.oferte.add(oferta);
     }
 
-    public void setDenumire(String denumire) {
-        this.denumire = denumire;
+    public Optional<Oferta> getCeaMaiMareOferta() {
+        return this.oferte.stream().max(Comparator.comparing(Oferta::getSuma));
     }
 
-    public Obiect getObiect() {
-        return obiect;
+    // Getters and Setters
+    public String getDenumireObiect() {
+        return denumireObiect;
     }
 
-    public void setObiect(Obiect obiect) {
-        this.obiect = obiect;
+    public void setDenumireObiect(String denumireObiect) {
+        this.denumireObiect = denumireObiect;
     }
 
     public boolean isFinalizat() {
@@ -39,11 +41,11 @@ public class Licitatie {
         this.finalizat = finalizat;
     }
 
-    public List<Oferta> getLicitatii() {
-        return licitatii;
+    public List<Oferta> getOferte() {
+        return oferte;
     }
 
-    public void setLicitatii(List<Oferta> licitatii) {
-        this.licitatii = licitatii;
+    public void setOferte(List<Oferta> oferte) {
+        this.oferte = oferte;
     }
 }
